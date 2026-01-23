@@ -7,7 +7,7 @@ public class AnalizadorLexico {
     // Columnas: 0=Letra, 1=Dígito, 2=Espacio/Otro, 3=Punto
     // Estados: 0=Inicio, 1=ID, 2=NUM, 3=Aceptar ID, 4=Aceptar NUM, 5=Punto, 6=Float, 7=Aceptar Float
     private static final int[][] TABLA = {
-            //  L   D   O   P
+            // L   D   _   P   .
             {  1,  2,  1,  0, -1 }, // S0 Inicio
             {  1,  1,  1,  3, -1 }, // S1 ID
             { -1,  2, -1,  4,  5 }, // S2 Entero
@@ -82,7 +82,7 @@ public class AnalizadorLexico {
 
     public static void main(String[] args) {
         AnalizadorLexico lexer = new AnalizadorLexico();
-        String codigo = "Suma1 = 100.1; contador = 25; patito1 = 50; temperatura = 24.5; x = 5; y = 10; ";
+        String codigo = "_Suma1 = 100.1; contador = 25; patito1 = 50; temperatura = 24.5; x = 5; y = 10; 20.25 ; ola= .10";
 
         System.out.println("Entrada: " + codigo);
         List<Token> resultado = lexer.escanear(codigo);
