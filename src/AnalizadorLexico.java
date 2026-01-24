@@ -17,11 +17,18 @@ public class AnalizadorLexico {
             { -1,  6, -1,  7, -1 }  // S6 Decimal
     };
 
+    // Verifica que la ID es válida (no solo "_" o "$")
+    private boolean idIsValid(String lexema) {
+        for(char c: lexema.toCharArray())
+            if (Character.isLetter(c)) return true;
+        return false;
+    }
+
     // Mapeo de categorías
     private int getCategoria(char c) {
         if (Character.isLetter(c)) return 0;
         if (Character.isDigit(c))  return 1;
-        if (c == '_')              return 2;
+        if (c == '_' || c == '$')  return 2;
         if (c == '.')              return 4;
         return 3;
     }
@@ -45,7 +52,13 @@ public class AnalizadorLexico {
 
             // Lógica de transición
             if (siguienteEstado == 3) { // Aceptar ID
-                tokens.add(new Token("ID", lexemaActual.toString()));
+                String lexema = lexemaActual.toString();
+
+                if(idIsValid(lexema)){
+                    tokens.add(new Token("ID", lexemaActual.toString()));
+                } else {
+                    System.err.println("Error Léxico: Identificador inválido '" + lexema + "'");
+                }
                 lexemaActual.setLength(0); // Limpiar buffer
                 estadoActual = 0;
                 // No incrementamos 'i' para que el delimitador se procese en S0
@@ -82,7 +95,7 @@ public class AnalizadorLexico {
 
     public static void main(String[] args) {
         AnalizadorLexico lexer = new AnalizadorLexico();
-        String codigo = "_Suma1 = 100.1; contador = 25; patito1 = 50; temperatura = 24.5; x = 5; y = 10; 20.25 ; ola= .10";
+        String codigo = "Suma1__ = 100.1; contador$$ = 25; pat_ito1 = 50; temperatura = 24.5; x = 5; y = 1$0; 20.25; ola = 10;";
 
         System.out.println("Entrada: " + codigo);
         List<Token> resultado = lexer.escanear(codigo);
