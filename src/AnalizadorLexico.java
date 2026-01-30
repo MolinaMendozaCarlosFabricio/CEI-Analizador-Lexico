@@ -2,7 +2,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnalizadorLexico {
-
+    private TablaSimbolos tamblaSimbolos = new TablaSimbolos();
+    private int lineaActual = 1;
     // 2. Definición de la Tabla de Transición
     // Columnas: 0=Letra, 1=Dígito, 2=Espacio/Otro, 3=Punto
     // Estados: 0=Inicio, 1=ID, 2=NUM, 3=Aceptar ID, 4=Aceptar NUM, 5=Punto, 6=Float, 7=Aceptar Float
@@ -39,7 +40,6 @@ public class AnalizadorLexico {
         StringBuilder lexemaActual = new StringBuilder();
         int i = 0;
 
-        // Simulamos el manejo del buffer de entrada con un puntero 'i'
         while (i < entrada.length()) {
             char c = entrada.charAt(i);
             int cat = getCategoria(c);
@@ -47,55 +47,47 @@ public class AnalizadorLexico {
 
             if (siguienteEstado == -1) {
                 System.err.println("Error Léxico: Carácter inesperado '" + c + "'");
-                break;
+                estadoActual = 0;
+                lexemaActual.setLength(0);
+                i++;
+                continue;
             }
 
-            // Lógica de transición
-            if (siguienteEstado == 3) { // Aceptar ID
+            if (siguienteEstado == 3) { // Aceptar ID [cite: 277]
                 String lexema = lexemaActual.toString();
-
                 if(idIsValid(lexema)){
-                    tokens.add(new Token("ID", lexemaActual.toString()));
-                } else {
-                    System.err.println("Error Léxico: Identificador inválido '" + lexema + "'");
+                    // Consultar tabla para ver si es ID o KEYWORD
+                    Simbolo simb = tamblaSimbolos.insertarOBuscar(lexema, "ID", lineaActual);
+                    tokens.add(new Token(simb.tipoToken, lexema));
                 }
-                lexemaActual.setLength(0); // Limpiar buffer
-                estadoActual = 0;
-                // No incrementamos 'i' para que el delimitador se procese en S0
-            } else if (siguienteEstado == 4) { // Aceptar NUM
-                tokens.add(new Token("NUM", lexemaActual.toString()));
                 lexemaActual.setLength(0);
                 estadoActual = 0;
-            } else if (siguienteEstado == 7) {
-                tokens.add(new Token("FLOAT", lexemaActual.toString()));
+            } else if (siguienteEstado == 4) { // Aceptar NUM
+                String lexema = lexemaActual.toString();
+                tamblaSimbolos.insertarOBuscar(lexema, "NUM", lineaActual);
+                tokens.add(new Token("NUM", lexema));
+                lexemaActual.setLength(0);
+                estadoActual = 0;
+            } else if (siguienteEstado == 7) { // Aceptar FLOAT
+                String lexema = lexemaActual.toString();
+                tamblaSimbolos.insertarOBuscar(lexema, "FLOAT", lineaActual);
+                tokens.add(new Token("FLOAT", lexema));
                 lexemaActual.setLength(0);
                 estadoActual = 0;
             } else {
-                // Seguir acumulando caracteres en el estado actual (S1 o S2)
                 if (siguienteEstado != 0) {
                     lexemaActual.append(c);
                 }
                 estadoActual = siguienteEstado;
-                i++; // Avanzar puntero
+                i++;
             }
         }
-
-        // Procesar el último token si quedó algo en el buffer al terminar el string
-        if (lexemaActual.length() > 0) {
-            String tipo;
-            if (estadoActual == 1) tipo = "ID";
-            else if (estadoActual == 2) tipo = "NUM";
-            else if (estadoActual == 6) tipo = "FLOAT";
-            else tipo = "ERROR";
-            tokens.add(new Token(tipo, lexemaActual.toString()));
-        }
-
         return tokens;
     }
 
     public static void main(String[] args) {
         AnalizadorLexico lexer = new AnalizadorLexico();
-        String codigo = "Suma1__ = 100.1; contador$$ = 25; pat_ito1 = 50; temperatura = 24.5; x = 5; y = 1$0; 20.25; ola = 10;";
+        String codigo = "int suma = 100.1; if (contador == 25) suma = 50;";
 
         System.out.println("Entrada: " + codigo);
         List<Token> resultado = lexer.escanear(codigo);
@@ -104,5 +96,8 @@ public class AnalizadorLexico {
         for (Token t : resultado) {
             System.out.println(t);
         }
+
+        // Desplegar contenido de la tabla [cite: 273]
+        lexer.tamblaSimbolos.mostrarTabla();
     }
 }
