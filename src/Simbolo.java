@@ -1,13 +1,4 @@
-public class Simbolo {
-    String lexema;
-    String tipoToken;
-    String tipoDato;
-    int linea;
-
-    public Simbolo (String lexema, String tipoToken, int linea) {
-        this.lexema = lexema;
-        this.tipoToken = tipoToken;
-        this.linea = linea;
-        this.tipoDato = "Desconocido";
-    }
+class Simbolo {
+    String lexema, tipoToken;
+    public Simbolo(String lexema, String tipoToken) { this.lexema = lexema; this.tipoToken = tipoToken; }
 }
